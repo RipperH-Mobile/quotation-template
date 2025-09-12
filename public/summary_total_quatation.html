@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบสรุปงานรวม</title>
+    <style>
+        body {
+            font-family: 'Sarabun', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        
+        .company-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            border-bottom: 1px dotted #666;
+            flex: 1;
+            margin-left: 10px;
+            min-height: 20px;
+        }
+        
+        .editable-input {
+            border: none;
+            border-bottom: 1px dotted #666;
+            background: transparent;
+            width: 100%;
+            padding: 2px 0;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        .editable-input:focus {
+            outline: none;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .table-input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 4px;
+            text-align: inherit;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        
+        .table-input:focus {
+            outline: 1px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .table-input.text-right {
+            text-align: right;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .text-left {
+            text-align: left;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .total-row {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            color: #333;
+        }
+        
+        .documents-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+        
+        .document-item input {
+            margin-right: 8px;
+        }
+        
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+        
+        .signature-box {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            margin: 10px 0;
+            height: 40px;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+        
+        @media print {
+            .print-button {
+                display: none;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">พิมพ์เอกสาร</button>
+    
+    <div class="header">
+        <h1>ใบสรุปงานรวม</h1>
+        <h2>(Consolidated Work Summary Report)</h2>
+    </div>
+    
+    <div class="company-info">
+        <div class="info-row">
+            <span class="info-label">เลขที่เอกสาร:</span>
+            <input type="text" class="editable-input" value="WS-2025-001" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">วันที่:</span>
+            <input type="date" class="editable-input" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">ลูกค้า:</span>
+            <input type="text" class="editable-input" placeholder="ระบุชื่อลูกค้า" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">โครงการ:</span>
+            <input type="text" class="editable-input" placeholder="ระบุชื่อโครงการ" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">ระยะเวลาดำเนินงานรวม:</span>
+            <input type="text" class="editable-input" placeholder="เช่น 01/01/2025 ถึง 31/03/2025" />
+        </div>
+    </div>
+    
+    <div class="section-title">สรุปใบเสนอราคาทั้งหมด</div>
+    <table>
+        <thead>
+            <tr>
+                <th>ใบเสนอราคาที่</th>
+                <th>เลขที่</th>
+                <th>วันที่</th>
+                <th class="text-left">รายการงานหลัก</th>
+                <th>มูลค่า (บาท)</th>
+                <th>สถานะ</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td><input type="text" class="table-input" placeholder="QT-001" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><input type="text" class="table-input" placeholder="QT-002" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><input type="text" class="table-input" placeholder="QT-003" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><input type="text" class="table-input" placeholder="QT-004" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td><input type="text" class="table-input" placeholder="QT-005" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td><input type="text" class="table-input" placeholder="QT-006" /></td>
+                <td><input type="date" class="table-input" /></td>
+                <td><input type="text" class="table-input text-left" placeholder="ระบุรายการงานหลัก" /></td>
+                <td><input type="number" class="table-input text-right" placeholder="0" /></td>
+                <td>
+                    <select class="table-input">
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                        <option value="ยกเลิก">ยกเลิก</option>
+                        <option value="รอดำเนินการ">รอดำเนินการ</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">สรุปยอดเงินรวม</div>
+    <table>
+        <thead>
+            <tr>
+                <th class="text-left">รายการ</th>
+                <th>จำนวนเงิน (บาท)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-left">ยอดรวม QT-1</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt1" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr>
+                <td class="text-left">ยอดรวม QT-2</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt2" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr>
+                <td class="text-left">ยอดรวม QT-3</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt3" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr>
+                <td class="text-left">ยอดรวม QT-4</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt4" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr>
+                <td class="text-left">ยอดรวม QT-5</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt5" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr>
+                <td class="text-left">ยอดรวม QT-6</td>
+                <td><input type="number" class="table-input text-right" placeholder="0" id="qt6" onchange="calculateTotal()" /></td>
+            </tr>
+            <tr class="total-row">
+                <td class="text-left">ยอดสุทธิทั้งหมด</td>
+                <td class="text-right" id="total">0</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="section-title">เอกสารที่ส่งมอบรวม</div>
+    <div class="documents-list">
+        <div class="document-item">
+            <input type="checkbox" id="doc1">
+            <label for="doc1">เอกสารคู่มือการใช้งาน (ทุกรายการ)</label>
+        </div>
+        <div class="document-item">
+            <input type="checkbox" id="doc2">
+            <label for="doc2">ใบรับประกันสินค้า/งาน (แยกตามใบเสนอราคา)</label>
+        </div>
+        <div class="document-item">
+            <input type="checkbox" id="doc3">
+            <label for="doc3">รายงานการทดสอบ (ถ้ามี)</label>
+        </div>
+        <div class="document-item">
+            <input type="checkbox" id="doc4">
+            <label for="doc4">รูปภาพงานที่เสร็จสิ้น (ทุกงาน)</label>
+        </div>
+        <div class="document-item">
+            <input type="checkbox" id="doc5">
+            <label for="doc5">สำเนาใบเสนอราคาต้นฉบับ (6 ใบ)</label>
+        </div>
+        <div class="document-item">
+            <input type="checkbox" id="doc6">
+            <label for="doc6">อื่นๆ: _________________</label>
+        </div>
+    </div>
+    
+    <div class="section-title">ข้อมูลการรับประกัน/การติดตาม</div>
+    <div class="company-info">
+        <div class="info-row">
+            <span class="info-label">ระยะเวลารับประกัน:</span>
+            <input type="number" class="editable-input" placeholder="12" style="width: 60px;" />
+            <span style="margin-left: 10px;">เดือน (นับจากวันส่งมอบงานสุดท้าย)</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">เงื่อนไขการรับประกัน:</span>
+            <input type="text" class="editable-input" placeholder="รับประกันคุณภาพงานและการติดตั้ง" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">ผู้รับผิดชอบหลังการขาย:</span>
+            <input type="text" class="editable-input" placeholder="ชื่อผู้รับผิดชอบ" />
+        </div>
+        <div class="info-row">
+            <span class="info-label">เบอร์ติดต่อ:</span>
+            <input type="tel" class="editable-input" placeholder="08X-XXX-XXXX" />
+        </div>
+    </div>
+    
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-title">ผู้จัดทำ</div>
+            <div style="margin: 15px 0;">
+                <div>ชื่อ: <input type="text" style="border:none; border-bottom:1px dotted #666; width:200px;" placeholder="ชื่อ-นามสกุล" /></div>
+                <div>ตำแหน่ง: <input type="text" style="border:none; border-bottom:1px dotted #666; width:200px;" placeholder="ตำแหน่ง" /></div>
+                <div>วันที่: <input type="date" style="border:none; border-bottom:1px dotted #666; width:150px;" /></div>
+            </div>
+            <div class="signature-line"></div>
+            <div>ลายเซ็น</div>
+        </div>
+        
+        <div class="signature-box">
+            <div class="signature-title">ผู้อนุมัติ (ฝ่ายลูกค้า)</div>
+            <div style="margin: 15px 0;">
+                <div>ชื่อ: <input type="text" style="border:none; border-bottom:1px dotted #666; width:200px;" placeholder="ชื่อ-นามสกุล" /></div>
+                <div>ตำแหน่ง: <input type="text" style="border:none; border-bottom:1px dotted #666; width:200px;" placeholder="ตำแหน่ง" /></div>
+                <div>วันที่: <input type="date" style="border:none; border-bottom:1px dotted #666; width:150px;" /></div>
+            </div>
+            <div class="signature-line"></div>
+            <div>ลายเซ็น</div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-left: 4px solid #007bff;">
+        <strong>หมายเหตุ:</strong> เอกสารนี้เป็นการสรุปงานรวมจากใบเสนอราคาทั้งหมด 6 ใบ ที่ได้ดำเนินการเสร็จสิ้นแล้ว หากมีข้อสงสัยกรุณาติดต่อกลับ
+    </div>
+
+    <script>
+        function calculateTotal() {
+            const qt1 = parseFloat(document.getElementById('qt1').value) || 0;
+            const qt2 = parseFloat(document.getElementById('qt2').value) || 0;
+            const qt3 = parseFloat(document.getElementById('qt3').value) || 0;
+            const qt4 = parseFloat(document.getElementById('qt4').value) || 0;
+            const qt5 = parseFloat(document.getElementById('qt5').value) || 0;
+            const qt6 = parseFloat(document.getElementById('qt6').value) || 0;
+            
+            const total = qt1 + qt2 + qt3 + qt4 + qt5 + qt6;
+            document.getElementById('total').textContent = total.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        
+        // Set today's date as default
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            dateInputs.forEach(input => {
+                if (!input.value) {
+                    input.value = today;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

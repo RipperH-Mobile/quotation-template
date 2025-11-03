@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ใบเสนอราคา - Quotation Template</title>
     
-    <!-- Firebase CDN -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -194,11 +193,41 @@
         .history-title {
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: #2c3e50;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .history-count {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: normal;
+        }
+        
+        .history-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+        
+        .history-tab {
+            flex: 1;
+            padding: 10px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .history-tab.active {
+            background: #3498db;
+            color: white;
         }
         
         .history-list {
@@ -242,7 +271,25 @@
         
         .history-actions {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .history-actions .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-dropdown {
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
         }
         
         .no-history {
@@ -681,7 +728,8 @@
             }
             
             .btn, .remove-btn, .button-container, 
-            .remove-desc-btn, .add-desc-btn, .back-to-home {
+            .remove-desc-btn, .add-desc-btn, .back-to-home,
+            .history-actions, .history-tabs, .status-dropdown {
                 display: none !important;
                 visibility: hidden !important;
             }
@@ -822,6 +870,32 @@
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
+
+            .landing-content {
+                padding: 20px;
+            }
+            
+            .history-section {
+                margin-top: 20px;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .history-actions {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .history-tab {
+                font-size: 12px;
+                padding: 8px 5px;
+            }
             
             .content {
                 padding: 10px;
@@ -859,10 +933,8 @@
     </style>
 </head>
 <body>
-    <!-- Status Indicator -->
     <div class="status-indicator" id="statusIndicator">🔥 เชื่อมต่อ Firebase สำเร็จ</div>
 
-    <!-- Login Section -->
     <div class="login-section" id="loginSection">
         <div class="login-title">🔐 เข้าสู่ระบบ</div>
         
@@ -901,7 +973,6 @@
         </div>
     </div>
 
-    <!-- Landing Page -->
     <div class="landing-page" id="landingPage">
         <div class="landing-header">
             <div class="landing-title">📋 ระบบใบเสนอราคา</div>
@@ -932,10 +1003,23 @@
             </div>
             
             <div class="history-section" id="historySection" style="display: none;">
-                <div class="history-title">
+                <div class.history-title">
                     📚 ประวัติใบเสนอราคา
-                    <span id="historyCount" style="font-size: 14px; color: #7f8c8d;">(0 รายการ)</span>
+                    <span class="history-count" id="historyCount">(0 รายการ)</span>
                 </div>
+                
+                <div class="history-tabs">
+                    <button class="history-tab active" data-status="inProgress" onclick="filterHistory('inProgress')">
+                        🏃‍♂️ กำลังดำเนินการ
+                    </button>
+                    <button class="history-tab" data-status="paidInProgress" onclick="filterHistory('paidInProgress')">
+                        💰 จ่ายแล้ว
+                    </button>
+                    <button class="history-tab" data-status="completed" onclick="filterHistory('completed')">
+                        ✅ จบงาน
+                    </button>
+                </div>
+                
                 <div class="history-list" id="historyList">
                     <div class="loading">🔄 กำลังโหลดข้อมูล...</div>
                 </div>
@@ -943,7 +1027,6 @@
         </div>
     </div>
 
-    <!-- Quotation Form -->
     <div class="quotation-container" id="quotationContainer">
         <button class="back-to-home" onclick="backToHome()">← กลับสู่หน้าหลัก</button>
         
@@ -1077,6 +1160,9 @@
         let db = null;
         let auth = null;
         let isAuthMode = 'login';
+        
+        // NEW: Global variable for history filter
+        let currentHistoryFilter = 'inProgress'; // 'inProgress', 'paidInProgress', 'completed'
 
         // ===== FIREBASE FUNCTIONS =====
         
@@ -1093,7 +1179,6 @@
                 appId: "1:181460378350:web:e6f1e5cad3341348c0c9ff",
                 measurementId: "G-R14YK816D2"
             };
-
 
             // ตรวจสอบว่ามี API Key จริงหรือไม่
             if (firebaseConfig.apiKey === "YOUR_REAL_API_KEY_HERE") {
@@ -1298,6 +1383,9 @@
             document.getElementById('landingPage').style.display = 'block';
             document.getElementById('quotationContainer').style.display = 'none';
             document.getElementById('historySection').style.display = 'none';
+            
+            // NEW: Reset filter when showing landing page
+            currentHistoryFilter = 'inProgress'; 
             loadHistory();
         }
 
@@ -1336,11 +1424,25 @@
                 }
 
                 const timestamp = new Date().toISOString();
+                
+                // NEW: Handle status logic
+                let currentStatus = 'inProgress'; // Default for new or copied items
+                
+                // If editing, find the existing status to preserve it
+                if (currentEditId) {
+                    const allHistory = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
+                    const existingItem = allHistory.find(item => item.id === currentEditId);
+                    if (existingItem && existingItem.status) {
+                        currentStatus = existingItem.status;
+                    }
+                }
+                
                 const historyItem = {
                     id: currentEditId || timestamp,
                     ...quotationData,
                     savedAt: timestamp,
                     lastModified: timestamp,
+                    status: currentStatus, // Add status to the item
                     userId: currentUser ? currentUser.uid : 'local'
                 };
 
@@ -1351,15 +1453,11 @@
                         await docRef.set(historyItem);
                         showMessage('✅ บันทึกไปยัง Firebase สำเร็จ!', 'success');
                         
-                        // Backup ไป localStorage ด้วย
+                        // Backup ไป localStorage ด้วย (อัปเดตข้อมูลทั้งหมด)
                         const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                        if (currentEditId) {
-                            const index = history.findIndex(item => item.id === currentEditId);
-                            if (index !== -1) {
-                                history[index] = historyItem;
-                            } else {
-                                history.unshift(historyItem);
-                            }
+                        const index = history.findIndex(item => item.id === historyItem.id);
+                        if (index !== -1) {
+                            history[index] = historyItem;
                         } else {
                             history.unshift(historyItem);
                         }
@@ -1379,13 +1477,9 @@
                         
                         // ใช้ localStorage แทนเมื่อ Firebase ล้มเหลว
                         const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                        if (currentEditId) {
-                            const index = history.findIndex(item => item.id === currentEditId);
-                            if (index !== -1) {
-                                history[index] = historyItem;
-                            } else {
-                                history.unshift(historyItem);
-                            }
+                        const index = history.findIndex(item => item.id === historyItem.id);
+                        if (index !== -1) {
+                            history[index] = historyItem;
                         } else {
                             history.unshift(historyItem);
                         }
@@ -1395,13 +1489,9 @@
                 } else {
                     // ใช้ localStorage เมื่อไม่ได้ login
                     const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                    if (currentEditId) {
-                        const index = history.findIndex(item => item.id === currentEditId);
-                        if (index !== -1) {
-                            history[index] = historyItem;
-                        } else {
-                            history.unshift(historyItem);
-                        }
+                    const index = history.findIndex(item => item.id === historyItem.id);
+                    if (index !== -1) {
+                        history[index] = historyItem;
                     } else {
                         history.unshift(historyItem);
                     }
@@ -1410,7 +1500,7 @@
                 }
 
                 currentEditId = historyItem.id;
-                loadHistory();
+                loadHistory(); // Reload history to reflect changes
 
             } catch (error) {
                 console.error('Save error:', error);
@@ -1436,72 +1526,60 @@
             try {
                 historyList.innerHTML = '<div class="loading">🔄 กำลังโหลดข้อมูล...</div>';
 
-                let history = [];
+                let allHistory = [];
 
                 if (useFirebase && isFirebaseInitialized && currentUser) {
                     try {
                         console.log('Loading from Firebase for user:', currentUser.uid);
                         
-                        // โหลดจาก Firebase แบบไม่ใช้ orderBy ก่อน (เพื่อหลีกเลี่ยง missing index)
+                        // MODIFIED: Fetch ALL data, don't filter by status here
                         const snapshot = await db.collection('quotations')
                             .where('userId', '==', currentUser.uid)
                             .get();
                         
-                        history = snapshot.docs.map(doc => ({
+                        allHistory = snapshot.docs.map(doc => ({
                             ...doc.data(),
-                            id: doc.id  // ใช้ document ID จาก Firebase
+                            id: doc.id
                         }));
                         
-                        // เรียงลำดับใน JavaScript แทน
-                        history.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+                        // เรียงลำดับใน JavaScript
+                        allHistory.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
                         
-                        console.log('Loaded from Firebase:', history.length, 'items');
+                        console.log('Loaded from Firebase:', allHistory.length, 'total items');
                         
-                        // Sync กับ localStorage (เขียนทับข้อมูลใน localStorage)
-                        localStorage.setItem('quotationHistory', JSON.stringify(history));
-                        
-                        if (history.length === 0) {
-                            // ถ้าไม่มีข้อมูลใน Firebase ลองโหลดจาก localStorage
-                            const localHistory = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                            if (localHistory.length > 0) {
-                                console.log('Found local data, syncing to Firebase...');
-                                // Sync ข้อมูลจาก localStorage ไป Firebase
-                                for (const item of localHistory) {
-                                    try {
-                                        await db.collection('quotations').doc(item.id).set({
-                                            ...item,
-                                            userId: currentUser.uid
-                                        });
-                                    } catch (syncError) {
-                                        console.warn('Sync to Firebase failed for item:', item.id, syncError);
-                                    }
-                                }
-                                history = localHistory;
-                            }
-                        }
+                        // Sync (overwrite) all data to localStorage
+                        localStorage.setItem('quotationHistory', JSON.stringify(allHistory));
                         
                     } catch (firebaseError) {
                         console.warn('Firebase load failed, using localStorage:', firebaseError);
                         // ถ้า Firebase ล้มเหลว ใช้ localStorage
-                        history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                        
-                        // แสดงข้อความแจ้งเตือน
+                        allHistory = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
                         showMessage('⚠️ โหลดจาก Firebase ล้มเหลว ใช้ข้อมูลในเครื่อง', 'warning');
                     }
                 } else {
                     // โหลดจาก localStorage เมื่อไม่ได้ login
-                    history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                    console.log('Loaded from localStorage:', history.length, 'items');
+                    allHistory = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
+                    console.log('Loaded from localStorage:', allHistory.length, 'total items');
                 }
                 
-                historyCount.textContent = `(${history.length} รายการ)`;
+                // NEW: Filter history based on the active tab
+                const filteredHistory = allHistory.filter(item => {
+                    const itemStatus = item.status || 'inProgress'; // Default old items to 'inProgress'
+                    return itemStatus === currentHistoryFilter;
+                });
 
-                if (history.length === 0) {
-                    historyList.innerHTML = '<div class="no-history">ยังไม่มีประวัติใบเสนอราคาที่บันทึกไว้</div>';
+                // NEW: Update count to show filtered and total
+                historyCount.textContent = `(${filteredHistory.length} รายการ / ทั้งหมด ${allHistory.length})`;
+
+                if (filteredHistory.length === 0) {
+                    historyList.innerHTML = `<div class="no-history">ไม่พบรายการในแท็บนี้</div>`;
                     return;
                 }
 
-                historyList.innerHTML = history.map(item => `
+                historyList.innerHTML = filteredHistory.map(item => {
+                    const itemStatus = item.status || 'inProgress';
+                    
+                    return `
                     <div class="history-item">
                         <div class="history-info">
                             <div class="history-project">${item.projectName || 'ไม่มีชื่อโครงการ'}</div>
@@ -1520,12 +1598,26 @@
                             </div>
                         </div>
                         <div class="history-actions">
-                            <button class="btn btn-primary btn-small" onclick="editQuotation('${item.id}')">✏️ แก้ไข</button>
-                            <button class="btn btn-danger btn-small" onclick="deleteHistoryItem('${item.id}')">🗑️ ลบ</button>
-                            <button class="btn btn-success btn-small" onclick="duplicateQuotation('${item.id}')">📋 คัดลอก</button>
+                            <select class="status-dropdown" onchange="updateStatus(this, '${item.id}')">
+                                <option value="inProgress" ${itemStatus === 'inProgress' ? 'selected' : ''}>
+                                    🏃‍♂️ กำลังดำเนินการ
+                                </option>
+                                <option value="paidInProgress" ${itemStatus === 'paidInProgress' ? 'selected' : ''}>
+                                    💰 จ่ายแล้ว
+                                </option>
+                                <option value="completed" ${itemStatus === 'completed' ? 'selected' : ''}>
+                                    ✅ จบงาน
+                                </option>
+                            </select>
+                            
+                            <div class="btn-group">
+                                <button class="btn btn-primary btn-small" onclick="editQuotation('${item.id}')">✏️ แก้ไข</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteHistoryItem('${item.id}')">🗑️ ลบ</button>
+                                <button class="btn btn-success btn-small" onclick="duplicateQuotation('${item.id}')">📋 คัดลอก</button>
+                            </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
             } catch (error) {
                 console.error('Load history error:', error);
@@ -1534,7 +1626,7 @@
         }
 
         async function deleteHistoryItem(id) {
-            if (!confirm('คุณแน่ใจหรือไม่ที่จะลบใบเสนอราคานี้?')) {
+            if (!confirm('คุณแนใจหรือไม่ที่จะลบใบเสนอราคานี้?')) {
                 return;
             }
 
@@ -1559,7 +1651,7 @@
                     showMessage('🗑️ ลบใบเสนอราคาสำเร็จ!', 'success');
                 }
 
-                loadHistory();
+                loadHistory(); // Reload history
 
             } catch (error) {
                 console.error('Delete error:', error);
@@ -1571,22 +1663,20 @@
             try {
                 let item = null;
 
-                if (useFirebase && isFirebaseInitialized && currentUser) {
+                // MODIFIED: Load from localStorage cache first
+                const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
+                item = history.find(h => h.id === id);
+
+                if (!item && useFirebase && isFirebaseInitialized && currentUser) {
+                    // Fallback to Firebase if not in cache
                     try {
-                        // โหลดจาก Firebase
                         const doc = await db.collection('quotations').doc(id).get();
                         if (doc.exists) {
                             item = doc.data();
                         }
                     } catch (firebaseError) {
-                        console.warn('Firebase load failed, using localStorage:', firebaseError);
+                        console.warn('Firebase load failed:', firebaseError);
                     }
-                }
-                
-                if (!item) {
-                    // ถ้าไม่พบใน Firebase หรือ Firebase ล้มเหลว ให้โหลดจาก localStorage
-                    const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                    item = history.find(h => h.id === id);
                 }
 
                 if (!item) {
@@ -1608,23 +1698,21 @@
         async function duplicateQuotation(id) {
             try {
                 let item = null;
-
-                if (useFirebase && isFirebaseInitialized && currentUser) {
+                
+                // MODIFIED: Load from localStorage cache first
+                const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
+                item = history.find(h => h.id === id);
+                
+                if (!item && useFirebase && isFirebaseInitialized && currentUser) {
+                     // Fallback to Firebase if not in cache
                     try {
-                        // โหลดจาก Firebase
                         const doc = await db.collection('quotations').doc(id).get();
                         if (doc.exists) {
                             item = doc.data();
                         }
                     } catch (firebaseError) {
-                        console.warn('Firebase load failed, using localStorage:', firebaseError);
+                        console.warn('Firebase load failed:', firebaseError);
                     }
-                }
-                
-                if (!item) {
-                    // ถ้าไม่พบใน Firebase หรือ Firebase ล้มเหลว ให้โหลดจาก localStorage
-                    const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
-                    item = history.find(h => h.id === id);
                 }
 
                 if (!item) {
@@ -1632,17 +1720,75 @@
                     return;
                 }
 
-                currentEditId = null;
+                currentEditId = null; // Set to null so it's saved as new
                 loadQuotationData(item);
-                generateNewQuoteNumber(); // Generate new quote number for duplicate
+                generateNewQuoteNumber(); // Generate new quote number
                 showQuotationForm();
-                showMessage('📋 คัดลอกใบเสนอราคาสำเร็จ! อย่าลืมบันทึกใหม่', 'success');
+                showMessage('📋 คัดลอกใบเสนอราคาสำเร็จ! (สถานะ: กำลังดำเนินการ)', 'success');
 
             } catch (error) {
                 console.error('Duplicate error:', error);
                 showMessage('❌ เกิดข้อผิดพลาดในการคัดลอก: ' + error.message, 'error');
             }
         }
+        
+        // ===== NEW: HISTORY FILTER FUNCTIONS =====
+
+        function filterHistory(status) {
+            currentHistoryFilter = status;
+            
+            // Update active tab
+            document.querySelectorAll('.history-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.history-tab[data-status="${status}"]`).classList.add('active');
+            
+            // Reload the list
+            loadHistory();
+        }
+
+        async function updateStatus(selectElement, id) {
+            const newStatus = selectElement.value;
+            const timestamp = new Date().toISOString();
+            
+            try {
+                if (useFirebase && isFirebaseInitialized && currentUser) {
+                    try {
+                        // Update Firebase
+                        await db.collection('quotations').doc(id).update({
+                            status: newStatus,
+                            lastModified: timestamp
+                        });
+                        showMessage('✅ อัปเดตสถานะใน Firebase สำเร็จ', 'success');
+                    } catch (firebaseError) {
+                        console.warn('Firebase update failed:', firebaseError);
+                        showMessage('⚠️ อัปเดต Firebase ล้มเหลว จะอัปเดตในเครื่อง', 'warning');
+                    }
+                }
+                
+                // Update localStorage
+                const history = JSON.parse(localStorage.getItem('quotationHistory') || '[]');
+                const itemIndex = history.findIndex(item => item.id === id);
+                
+                if (itemIndex !== -1) {
+                    history[itemIndex].status = newStatus;
+                    history[itemIndex].lastModified = timestamp;
+                    localStorage.setItem('quotationHistory', JSON.stringify(history));
+                }
+                
+                if (!useFirebase || !currentUser) {
+                    showMessage('✅ อัปเดตสถานะในเครื่องสำเร็จ', 'success');
+                }
+                
+                // Reload history to move item to correct tab
+                loadHistory();
+
+            } catch (error) {
+                console.error('Update status error:', error);
+                showMessage('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + error.message, 'error');
+            }
+        }
+
 
         // ===== LANDING PAGE FUNCTIONS =====
         
@@ -1661,6 +1807,12 @@
             const historySection = document.getElementById('historySection');
             if (historySection.style.display === 'none') {
                 historySection.style.display = 'block';
+                
+                // NEW: Reset to default tab when opening
+                currentHistoryFilter = 'inProgress';
+                document.querySelectorAll('.history-tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('.history-tab[data-status="inProgress"]').classList.add('active');
+                
                 loadHistory();
             } else {
                 historySection.style.display = 'none';
@@ -1822,6 +1974,7 @@
                 totalAmount: document.getElementById('totalAmount')?.textContent || '0.00',
                 items: []
             };
+            // Note: 'status' is NOT gathered here, it's handled in saveToHistory()
 
             // Gather items data with null checks
             const rows = document.querySelectorAll('#itemsBody tr');
@@ -2230,7 +2383,7 @@
                 
                 setTimeout(() => {
                     // Hide elements for print
-                    const elementsToHide = document.querySelectorAll('.btn, .remove-btn, .button-container, .remove-desc-btn, .add-desc-btn, .back-to-home, .items-table th:last-child, .items-table td:last-child');
+                    const elementsToHide = document.querySelectorAll('.btn, .remove-btn, .button-container, .remove-desc-btn, .add-desc-btn, .back-to-home, .items-table th:last-child, .items-table td:last-child, .history-actions, .status-dropdown');
                     elementsToHide.forEach(el => el.style.display = 'none');
                     
                     // Print
@@ -2249,7 +2402,7 @@
             // Auto-save to history before downloading
             await saveToHistory();
             
-            const buttons = document.querySelectorAll('.btn, .remove-btn, .button-container, .remove-desc-btn, .add-desc-btn, .back-to-home');
+            const buttons = document.querySelectorAll('.btn, .remove-btn, .button-container, .remove-desc-btn, .add-desc-btn, .back-to-home, .status-dropdown');
             buttons.forEach(btn => btn.style.display = 'none');
             
             const htmlContent = `<!DOCTYPE html>
